@@ -1,6 +1,8 @@
 #!/bin/bash
 
 PLATFORM=`sonic-cfggen -H -v DEVICE_METADATA.localhost.platform`
+CHASSIS_NAME=`sonic-cfggen -d -v DEVICE_METADATA.localhost.chassis_name`
+SLOT_ID=`sonic-cfggen -d -v DEVICE_METADATA.localhost.slot_id`
 
 # Parse the device specific asic conf file, if it exists
 ASIC_CONF=/usr/share/sonic/device/$PLATFORM/asic.conf
@@ -19,8 +21,15 @@ else
 fi
 hostname=$(hostname)
 
-sonic-cfggen -d -t /usr/share/sonic/templates/rsyslog.conf.j2 \
-    -a "{\"udp_server_ip\": \"$udp_server_ip\", \"hostname\": \"$hostname\"}" \
-    > /etc/rsyslog.conf
+template="\"udp_server_ip\": \"$udp_server_ip\", \"hostname\": \"$hostname\""
+echo $template
+if [ -n "$CHASSIS_NAME" ]; then
+    template="$template, \"chassis_name_marker\": \"CHASSIS_NAME:\""
+fi
 
+if [ -n "$SLOT_ID" ]; then
+    template="$template, \"slot_id_marker\": \"SLOT_ID:\""
+fi
+
+sonic-cfggen -d -t /usr/share/sonic/templates/rsyslog.conf.j2 -a "{$template}" >/etc/rsyslog.conf
 systemctl restart rsyslog

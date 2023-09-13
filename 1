@@ -1,0 +1,52 @@
+# Enable Powerlevel10k instant prompt. Should stay close to the top of ~/.zshrc.
+# Initialization code that may require console input (password prompts, [y/n]
+# confirmations, etc.) must go above this block; everything else may go below.
+if [[ -r "${XDG_CACHE_HOME:-$HOME/.cache}/p10k-instant-prompt-${(%):-%n}.zsh" ]]; then
+  source "${XDG_CACHE_HOME:-$HOME/.cache}/p10k-instant-prompt-${(%):-%n}.zsh"
+fi
+
+source ~/tools/powerlevel10k/powerlevel10k.zsh-theme
+
+# To customize prompt, run `p10k configure` or edit ~/.p10k.zsh.
+[[ ! -f ~/.p10k.zsh ]] || source ~/.p10k.zsh
+
+[ -f ~/.fzf.zsh ] && source ~/.fzf.zsh
+
+export HISTFILE=~/.zsh_history
+export HISTSIZE=100000
+export HISTFILESIZE=100000
+SAVEHIST=1000
+
+alias ta="tmux attach-session -t"
+alias ts="tmux new-session -A -s"
+
+__tmux_fzf_get_session__() {
+    session=$(tmux list-sessions -F "#{session_name}" 2>/dev/null |
+        fzf --exit-0 --preview='~/bin/tmux_tree {}')
+    echo "$session"
+}
+# Tmux session switcher (`tms foo` attaches to `foo` if exists, else creates
+# it)
+tms() {
+    [[ -n "$TMUX" ]] && change="switch-client" || change="attach-session"
+    if [[ -n "$1" ]]; then
+        if [[ "$1" == "-ask" ]]; then
+            read -r -p "New tmux session name: " session_name
+        else
+            session_name="$1"
+        fi
+        tmux $change -t "$session_name" 2>/dev/null || \
+            (tmux -f "$HOME/.tmux/tmux.conf" new-session -d -s "$session_name" && \
+            tmux $change -t "$session_name");
+        return
+    fi
+    session=$(eval __tmux_fzf_get_session__)
+    tmux $change -t "$session" || echo "No sessions found."
+}
+
+export PATH="$HOME/bin:$HOME/.tmux/plugins/tmuxifier/bin:$PATH"
+eval "$(tmuxifier init -)"
+
+alias brcm_configure="smake configure PLATFORM=broadcom"
+alias vs_configure="smake configure PLATFORM=vs"
+alias smake_cfg_engine=""
