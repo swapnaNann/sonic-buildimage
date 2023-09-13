@@ -33,6 +33,9 @@ $ModLoad imudp
 $UDPServerAddress {{udp_server_ip}}  #bind to localhost before udp server run
 $UDPServerRun 514
 
+# provides support to use external plugins
+$ModLoad mmexternal
+
 # provides TCP syslog reception
 #$ModLoad imtcp
 #$InputTCPServerRun 514
