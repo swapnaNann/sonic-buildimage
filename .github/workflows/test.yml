@@ -11,5 +11,5 @@ jobs:
     name: Build Lumentum SONiC Image
     runs-on: sonic-buildmachine-2
   steps:
-    - name: checkout repo
+    - name: checkout code
       uses: actions/checkout@v4
